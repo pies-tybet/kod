@@ -211,18 +211,23 @@ def Roof_fill():
                                     rectangles.append(patches.Rectangle((current_x, current_y), half_panel_width, height, linewidth=1, edgecolor=(0.1, 1.0, 0.0, 1), facecolor='none'))
                                     current_x += half_panel_width
                         #dlugie
-                        print(max(j[1] for i in holes for j in i))
-                        print(min(j[1] for i in holes for j in i))
+                        minHoleY = math.inf
+                        maxHoleY = 0
+                        if holes:
+                            minHoleY = min(j[1] for i in holes for j in i)
+                            maxHoleY = max(j[1] for i in holes for j in i)
+
+
                         while buffered_roof_poly.contains(Polygon([(current_x, current_y), (current_x + smallest_element_width, current_y), (current_x + smallest_element_width, current_y + height), (current_x, current_y + height), (current_x, current_y)])):
                             if not polygon_intersects_hole(Polygon([(current_x, current_y), (current_x + smallest_element_width, current_y), (current_x + smallest_element_width, current_y + height), (current_x, current_y + height), (current_x, current_y)]), holes) and ishole and right == 1:
                                 rectangles.append(patches.Rectangle((current_x, current_y), half_panel_width, height, linewidth=1, edgecolor=(0.0, 1.0, 0.1, 1), facecolor='none'))
                                 current_x += half_panel_width
                                 ishole = False  # bufor od prawej od dziury
                                 
-                            elif current_y < (min(j[1] for i in holes for j in i))-2 and polygon_intersects_buffer(Polygon([(current_x, current_y), (current_x + smallest_element_width, current_y), (current_x + smallest_element_width, current_y + height), (current_x, current_y + height), (current_x, current_y)]), holes) and not ishole:
+                            elif current_y < minHoleY-2 and polygon_intersects_buffer(Polygon([(current_x, current_y), (current_x + smallest_element_width, current_y), (current_x + smallest_element_width, current_y + height), (current_x, current_y + height), (current_x, current_y)]), holes) and not ishole:
                                 rectangles.append(patches.Rectangle((current_x, current_y), half_panel_width, height, linewidth=1, edgecolor=(0.0, 1.0, 0.1, 1), facecolor='none'))
                                 current_x += half_panel_width
-                            elif current_y > (max(j[1] for i in holes for j in i))-2 and polygon_intersects_buffer(Polygon([(current_x, current_y), (current_x + smallest_element_width, current_y), (current_x + smallest_element_width, current_y + height), (current_x, current_y + height), (current_x, current_y)]), holes) and not ishole:
+                            elif current_y > maxHoleY-2 and polygon_intersects_buffer(Polygon([(current_x, current_y), (current_x + smallest_element_width, current_y), (current_x + smallest_element_width, current_y + height), (current_x, current_y + height), (current_x, current_y)]), holes) and not ishole:
                                 rectangles.append(patches.Rectangle((current_x, current_y), half_panel_width, height, linewidth=1, edgecolor=(0.0, 1.0, 0.1, 1), facecolor='none'))
                                 current_x += half_panel_width
                             elif not polygon_intersects_hole(Polygon([(current_x, current_y), (current_x + smallest_element_width, current_y), (current_x + smallest_element_width, current_y + height), (current_x, current_y + height), (current_x, current_y)]), holes):
@@ -235,7 +240,7 @@ def Roof_fill():
                                 right = 1
                             else:
                                 current_x += smallest_element_width
-                                ishole = True   # W SRODKU DZIURY
+                                ishole = True   # w srodku dziury
                             # if (y >= max_dziura_y and intersects with dziura.buffer)
                             #       stawiaj male zielone
                             #else       
