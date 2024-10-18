@@ -120,7 +120,7 @@ def Roof_fill():
         def polygon_intersects_buffer(polygon, holes):
             for hole in holes:
                 hole_polygon = Polygon(hole)
-                buffered_polygon = hole_polygon.buffer(10, join_style=2)
+                buffered_polygon = hole_polygon.buffer(3, join_style=2)
 
                 if buffered_polygon.intersects(polygon):
                     return True
@@ -186,7 +186,7 @@ def Roof_fill():
         tolerance = 1e-2
         buffered_roof_poly = roof_poly.buffer(tolerance)
         rectangles = []
-
+        right = 0
         ishole = False
         for index, row in enumerate(rows):
             current_y = row['Points'][0][1]
@@ -214,10 +214,11 @@ def Roof_fill():
                         print(max(j[1] for i in holes for j in i))
                         print(min(j[1] for i in holes for j in i))
                         while buffered_roof_poly.contains(Polygon([(current_x, current_y), (current_x + smallest_element_width, current_y), (current_x + smallest_element_width, current_y + height), (current_x, current_y + height), (current_x, current_y)])):
-                            if not polygon_intersects_hole(Polygon([(current_x, current_y), (current_x + smallest_element_width, current_y), (current_x + smallest_element_width, current_y + height), (current_x, current_y + height), (current_x, current_y)]), holes) and ishole:
+                            if not polygon_intersects_hole(Polygon([(current_x, current_y), (current_x + smallest_element_width, current_y), (current_x + smallest_element_width, current_y + height), (current_x, current_y + height), (current_x, current_y)]), holes) and ishole and right == 1:
                                 rectangles.append(patches.Rectangle((current_x, current_y), half_panel_width, height, linewidth=1, edgecolor=(0.0, 1.0, 0.1, 1), facecolor='none'))
                                 current_x += half_panel_width
                                 ishole = False  # bufor od prawej od dziury
+                                
                             elif current_y < (min(j[1] for i in holes for j in i))-2 and polygon_intersects_buffer(Polygon([(current_x, current_y), (current_x + smallest_element_width, current_y), (current_x + smallest_element_width, current_y + height), (current_x, current_y + height), (current_x, current_y)]), holes) and not ishole:
                                 rectangles.append(patches.Rectangle((current_x, current_y), half_panel_width, height, linewidth=1, edgecolor=(0.0, 1.0, 0.1, 1), facecolor='none'))
                                 current_x += half_panel_width
@@ -231,6 +232,7 @@ def Roof_fill():
                             elif not polygon_intersects_hole(Polygon([(current_x, current_y), (current_x + half_panel_width, current_y), (current_x + half_panel_width, current_y + height), (current_x, current_y + height), (current_x, current_y)]),holes):
                                 rectangles.append(patches.Rectangle((current_x, current_y), half_panel_width, height, linewidth=1, edgecolor=(0.0, 1.0, 0.1, 1), facecolor='none'))
                                 current_x += half_panel_width   # bufor od lewej od dziury
+                                right = 1
                             else:
                                 current_x += smallest_element_width
                                 ishole = True   # W SRODKU DZIURY
@@ -259,6 +261,7 @@ def Roof_fill():
                         #print("current_x: ", current_x, "current_y: ", current_y)
                         #print("Point does not exist in the row")
                 current_y += height  # Move to the next row
+                test = 1
         # Funkcja do scalania ze sobą prostokątów według koloru
         def merge_adjacent_rectangles(rectangles, sizes, color):
 
