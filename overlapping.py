@@ -120,7 +120,7 @@ def Roof_fill():
         def polygon_intersects_buffer(polygon, holes):
             for hole in holes:
                 hole_polygon = Polygon(hole)
-                buffered_polygon = hole_polygon.buffer(7, join_style=2)
+                buffered_polygon = hole_polygon.buffer(8, join_style=2)
 
                 if buffered_polygon.intersects(polygon):
                     return True
@@ -180,7 +180,7 @@ def Roof_fill():
                     rows.append(row)
                 y += height
 
-        print(rows)
+        
 
         # Pętla wyznaczająca elementy aktywne i pasywne
         tolerance = 1e-2
@@ -194,8 +194,8 @@ def Roof_fill():
                 current_x = row['Min']
                 while current_x <= row['Max']:
                     if (current_x, current_y) in row['Points']:
-                        print(f"Current point: ({current_x}, {current_y})")
-                        print(f"Index: {index}")
+                        #print(f"Current point: ({current_x}, {current_y})")
+                        #print(f"Index: {index}")
                         if roof_type == "P":
                             if index % 2 == 0 and mixed:
                                 if buffered_roof_poly.contains(Polygon([(current_x, current_y), (current_x + smallest_element_width, current_y), (current_x + smallest_element_width, current_y + height), (current_x, current_y + height), (current_x, current_y)])) and not polygon_intersects_hole(Polygon([(current_x, current_y), (current_x + smallest_element_width, current_y), (current_x + smallest_element_width, current_y + height), (current_x, current_y + height), (current_x, current_y)]), holes):
@@ -222,14 +222,12 @@ def Roof_fill():
                             if not polygon_intersects_hole(Polygon([(current_x, current_y), (current_x + half_panel_width, current_y), (current_x + half_panel_width, current_y + height), (current_x, current_y + height), (current_x, current_y)]), holes) and ishole and right == 1:
                                 rectangles.append(patches.Rectangle((current_x, current_y), half_panel_width, height, linewidth=1, edgecolor=(0.0, 1.0, 0.1, 1), facecolor='none'))
                                 current_x += half_panel_width
-                                ishole = False  # bufor od prawej od dziury
-                                
-                            elif current_y < minHoleY-2 and polygon_intersects_buffer(Polygon([(current_x, current_y), (current_x + smallest_element_width, current_y), (current_x + smallest_element_width, current_y + height), (current_x, current_y + height), (current_x, current_y)]), holes) and not ishole:
+                                ishole = False  # bufor od prawej od dziury   
+                                print("tak")
+                                right = 0
+                            elif polygon_intersects_buffer(Polygon([(current_x, current_y), (current_x + half_panel_width, current_y), (current_x + half_panel_width, current_y + height), (current_x, current_y + height), (current_x, current_y)]), holes) and not polygon_intersects_hole(Polygon([(current_x, current_y), (current_x + half_panel_width, current_y), (current_x + half_panel_width, current_y + height), (current_x, current_y + height), (current_x, current_y)]), holes) and not polygon_intersects_hole(Polygon([(current_x, current_y), (current_x + (2*half_panel_width), current_y), (current_x + (2*half_panel_width), current_y + height), (current_x, current_y + height), (current_x, current_y)]), holes) and not polygon_intersects_hole(Polygon([(current_x-half_panel_width, current_y), (current_x, current_y), (current_x, current_y + height), (current_x-half_panel_width, current_y + height), (current_x-half_panel_width, current_y)]), holes):
                                 rectangles.append(patches.Rectangle((current_x, current_y), half_panel_width, height, linewidth=1, edgecolor=(0.0, 1.0, 0.1, 1), facecolor='none'))
-                                current_x += half_panel_width
-                            elif current_y > maxHoleY and polygon_intersects_buffer(Polygon([(current_x, current_y), (current_x + smallest_element_width, current_y), (current_x + smallest_element_width, current_y + height), (current_x, current_y + height), (current_x, current_y)]), holes) and not ishole:
-                                rectangles.append(patches.Rectangle((current_x, current_y), half_panel_width, height, linewidth=1, edgecolor=(0.0, 1.0, 0.1, 1), facecolor='none'))
-                                current_x += half_panel_width
+                                current_x += half_panel_width 
                             elif not polygon_intersects_hole(Polygon([(current_x, current_y), (current_x + smallest_element_width, current_y), (current_x + smallest_element_width, current_y + height), (current_x, current_y + height), (current_x, current_y)]), holes):
                                 #print()
                                 rectangles.append(patches.Rectangle((current_x, current_y), smallest_element_width, height, linewidth=1, edgecolor='g', facecolor='none'))
