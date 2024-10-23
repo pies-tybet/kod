@@ -6,6 +6,7 @@ import matplotlib.patches as patches
 from shapely.geometry import Polygon, LineString, MultiPolygon, Point
 from shapely.ops import unary_union  ### zwraca wartosc wielu wielokatow pod jendym pod combined_polygon
 from shapely import intersects
+from shapely.affinity import translate
 from flask import Flask, request, jsonify
 from flasgger import LazyJSONEncoder
 from flask_cors import CORS
@@ -125,6 +126,17 @@ def Roof_fill():
                 if buffered_polygon.intersects(polygon):
                     return True
             return False
+        def intersects_vertical(polygon, holes):
+            for hole in holes:
+                hole_polygon = Polygon(hole)
+                vertical_buffer = 8
+                expanded_up = translate(hole_polygon, yoff=vertical_buffer)
+                expanded_down = translate(hole_polygon, yoff=-vertical_buffer)
+
+                expanded_polygon = expanded_up.union(expanded_down)
+                if polygon.intersects(expanded_polygon):
+                    return True
+            return False
         
         # # Obliczanie optymalnej wysokości
         def optimal_height(min_height, max_height, total_height):
@@ -226,7 +238,7 @@ def Roof_fill():
                                 print("tak")
                                 right = 0
                                 #
-                            elif polygon_intersects_buffer(Polygon([(current_x, current_y), (current_x + half_panel_width, current_y), (current_x + half_panel_width, current_y + height), (current_x, current_y + height), (current_x, current_y)]), holes) and not polygon_intersects_hole(Polygon([(current_x, current_y), (current_x + half_panel_width, current_y), (current_x + half_panel_width, current_y + height), (current_x, current_y + height), (current_x, current_y)]), holes) and not polygon_intersects_hole(Polygon([(current_x, current_y), (current_x + (2*half_panel_width), current_y), (current_x + (2*half_panel_width), current_y + height), (current_x, current_y + height), (current_x, current_y)]), holes) and not polygon_intersects_hole(Polygon([(current_x-half_panel_width, current_y), (current_x, current_y), (current_x, current_y + height), (current_x-half_panel_width, current_y + height), (current_x-half_panel_width, current_y)]), holes):
+                            elif intersects_vertical(Polygon([(current_x, current_y), (current_x + half_panel_width, current_y), (current_x + half_panel_width, current_y + height), (current_x, current_y + height), (current_x, current_y)]), holes) and not polygon_intersects_hole(Polygon([(current_x, current_y), (current_x + half_panel_width, current_y), (current_x + half_panel_width, current_y + height), (current_x, current_y + height), (current_x, current_y)]), holes) and not polygon_intersects_hole(Polygon([(current_x, current_y), (current_x + (2*half_panel_width), current_y), (current_x + (2*half_panel_width), current_y + height), (current_x, current_y + height), (current_x, current_y)]), holes) and not polygon_intersects_hole(Polygon([(current_x-half_panel_width, current_y), (current_x, current_y), (current_x, current_y + height), (current_x-half_panel_width, current_y + height), (current_x-half_panel_width, current_y)]), holes):
                                 rectangles.append(patches.Rectangle((current_x, current_y), half_panel_width, height, linewidth=1, edgecolor=(0.0, 1.0, 0.1, 1), facecolor='none'))
                                 current_x += half_panel_width 
                             elif not polygon_intersects_hole(Polygon([(current_x, current_y), (current_x + smallest_element_width, current_y), (current_x + smallest_element_width, current_y + height), (current_x, current_y + height), (current_x, current_y)]), holes):
