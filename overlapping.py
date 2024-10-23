@@ -225,6 +225,7 @@ def Roof_fill():
                                 ishole = False  # bufor od prawej od dziury   
                                 print("tak")
                                 right = 0
+                                #
                             elif polygon_intersects_buffer(Polygon([(current_x, current_y), (current_x + half_panel_width, current_y), (current_x + half_panel_width, current_y + height), (current_x, current_y + height), (current_x, current_y)]), holes) and not polygon_intersects_hole(Polygon([(current_x, current_y), (current_x + half_panel_width, current_y), (current_x + half_panel_width, current_y + height), (current_x, current_y + height), (current_x, current_y)]), holes) and not polygon_intersects_hole(Polygon([(current_x, current_y), (current_x + (2*half_panel_width), current_y), (current_x + (2*half_panel_width), current_y + height), (current_x, current_y + height), (current_x, current_y)]), holes) and not polygon_intersects_hole(Polygon([(current_x-half_panel_width, current_y), (current_x, current_y), (current_x, current_y + height), (current_x-half_panel_width, current_y + height), (current_x-half_panel_width, current_y)]), holes):
                                 rectangles.append(patches.Rectangle((current_x, current_y), half_panel_width, height, linewidth=1, edgecolor=(0.0, 1.0, 0.1, 1), facecolor='none'))
                                 current_x += half_panel_width 
