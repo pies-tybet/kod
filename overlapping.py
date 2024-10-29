@@ -6,7 +6,6 @@ import matplotlib.patches as patches
 from shapely.geometry import Polygon, LineString, MultiPolygon, Point
 from shapely.ops import unary_union  ### zwraca wartosc wielu wielokatow pod jendym pod combined_polygon
 from shapely import intersects
-from shapely.affinity import translate
 from flask import Flask, request, jsonify
 from flasgger import LazyJSONEncoder
 from flask_cors import CORS
@@ -114,27 +113,16 @@ def Roof_fill():
                 hole_polygon = Polygon(hole)
                 buffered_polygon = hole_polygon.buffer(10, join_style=2)
 
-                if hole_polygon.intersects(polygon):
+                if buffered_polygon.intersects(polygon):
                     return True
             return False
 
         def polygon_intersects_buffer(polygon, holes):
             for hole in holes:
                 hole_polygon = Polygon(hole)
-                buffered_polygon = hole_polygon.buffer(8, join_style=2)
+                buffered_polygon = hole_polygon.buffer(10, join_style=2)
 
                 if buffered_polygon.intersects(polygon):
-                    return True
-            return False
-        def intersects_vertical(polygon, holes):
-            for hole in holes:
-                hole_polygon = Polygon(hole)
-                vertical_buffer = 8
-                expanded_up = translate(hole_polygon, yoff=vertical_buffer)
-                expanded_down = translate(hole_polygon, yoff=-vertical_buffer)
-
-                expanded_polygon = expanded_up.union(expanded_down)
-                if polygon.intersects(expanded_polygon):
                     return True
             return False
         
@@ -234,28 +222,23 @@ def Roof_fill():
                             if not polygon_intersects_hole(Polygon([(current_x, current_y), (current_x + half_panel_width, current_y), (current_x + half_panel_width, current_y + height), (current_x, current_y + height), (current_x, current_y)]), holes) and ishole and right == 1:
                                 rectangles.append(patches.Rectangle((current_x, current_y), half_panel_width, height, linewidth=1, edgecolor=(0.0, 1.0, 0.1, 1), facecolor='none'))
                                 current_x += half_panel_width
-                                ishole = False  # bufor od prawej od dziury   
+                                ishole = False 
                                 print("tak")
                                 right = 0
-                                #
-                            elif intersects_vertical(Polygon([(current_x, current_y), (current_x + half_panel_width, current_y), (current_x + half_panel_width, current_y + height), (current_x, current_y + height), (current_x, current_y)]), holes) and not polygon_intersects_hole(Polygon([(current_x, current_y), (current_x + half_panel_width, current_y), (current_x + half_panel_width, current_y + height), (current_x, current_y + height), (current_x, current_y)]), holes) and not polygon_intersects_hole(Polygon([(current_x, current_y), (current_x + (2*half_panel_width), current_y), (current_x + (2*half_panel_width), current_y + height), (current_x, current_y + height), (current_x, current_y)]), holes) and not polygon_intersects_hole(Polygon([(current_x-half_panel_width, current_y), (current_x, current_y), (current_x, current_y + height), (current_x-half_panel_width, current_y + height), (current_x-half_panel_width, current_y)]), holes):
+                            elif polygon_intersects_buffer(Polygon([(current_x, current_y), (current_x + half_panel_width, current_y), (current_x + half_panel_width, current_y + height), (current_x, current_y + height), (current_x, current_y)]), holes) and not polygon_intersects_hole(Polygon([(current_x, current_y), (current_x + half_panel_width, current_y), (current_x + half_panel_width, current_y + height), (current_x, current_y + height), (current_x, current_y)]), holes) and not polygon_intersects_hole(Polygon([(current_x, current_y), (current_x + (2*half_panel_width), current_y), (current_x + (2*half_panel_width), current_y + height), (current_x, current_y + height), (current_x, current_y)]), holes) and not polygon_intersects_hole(Polygon([(current_x-half_panel_width, current_y), (current_x, current_y), (current_x, current_y + height), (current_x-half_panel_width, current_y + height), (current_x-half_panel_width, current_y)]), holes):
                                 rectangles.append(patches.Rectangle((current_x, current_y), half_panel_width, height, linewidth=1, edgecolor=(0.0, 1.0, 0.1, 1), facecolor='none'))
                                 current_x += half_panel_width 
                             elif not polygon_intersects_hole(Polygon([(current_x, current_y), (current_x + smallest_element_width, current_y), (current_x + smallest_element_width, current_y + height), (current_x, current_y + height), (current_x, current_y)]), holes):
-                                #print()
                                 rectangles.append(patches.Rectangle((current_x, current_y), smallest_element_width, height, linewidth=1, edgecolor='g', facecolor='none'))
-                                current_x += smallest_element_width    # zwykle
+                                current_x += smallest_element_width 
                             elif not polygon_intersects_hole(Polygon([(current_x, current_y), (current_x + half_panel_width, current_y), (current_x + half_panel_width, current_y + height), (current_x, current_y + height), (current_x, current_y)]),holes):
                                 rectangles.append(patches.Rectangle((current_x, current_y), half_panel_width, height, linewidth=1, edgecolor=(0.0, 1.0, 0.1, 1), facecolor='none'))
-                                current_x += half_panel_width   # bufor od lewej od dziury
+                                current_x += half_panel_width
                                 right = 1 
                             else:
                                 current_x += smallest_element_width
-                                ishole = True   # w srodku dziury
-                            #if (y >= max_dziura_y and intersects with dziura.buffer)
-                            #       stawiaj male zielone
-                            #else
-                            #       zwykle
+                                ishole = True   
+                           
                             
                             
 
@@ -388,10 +371,103 @@ def Roof_fill():
             input_groups[group_id].append(polygon['points'])
     
     combined_elements = []
+    last_poly = None
+
+    ldistance = 0
+    rdistance = 0
+    udistance = 0
+    ddistance = 0
+    polygons_to_keep = []
+    other_polys = []
     for group_id, group_polygons in input_groups.items():
         if len(group_polygons) > 1:
+            print(group_polygons)
             polygons = [Polygon(p) for p in group_polygons]
+            for polygon in polygons:
+                 
+                if last_poly is None:
+                    last_poly = polygon
+                    
+                    polygons_to_keep.append(polygon)
+                elif last_poly.intersects( polygon ):
+                    last_poly = last_poly.union(polygon)
+                    
+                    polygons_to_keep.append(polygon)
+                else:
+                    other_polys.append(polygon)
+            
+            polygons = polygons_to_keep
             merged_polygon = unary_union(polygons)
+            print(other_polys)
+            if other_polys:
+                for poly in other_polys:
+                    isIntersecting = False
+                    temp_poly = poly
+                    for i in range(11):
+                        
+                        
+                        temp_poly = Polygon([(x - i, y) for x, y in poly.exterior.coords])
+                        if temp_poly.intersects( merged_polygon ):
+                            ldistance = i
+                            isIntersecting = True
+                            break
+                    temp_poly = poly
+                    for i in range(11):
+                        
+                        
+                        temp_poly = Polygon([(x + i, y) for x, y in poly.exterior.coords])
+                        if temp_poly.intersects( merged_polygon ):
+                            rdistance = i
+                            isIntersecting = True
+                            break
+                    temp_poly = poly
+                    for i in range(11):
+                        temp_poly = poly
+                        
+                        temp_poly = Polygon([(x, y+i) for x, y in poly.exterior.coords])
+                        if temp_poly.intersects( merged_polygon ):
+                            udistance = i
+                            isIntersecting = True
+                            break
+                    temp_poly = poly
+                    for i in range(11):
+                        
+                        
+                        temp_poly = Polygon([(x, y-i) for x, y in poly.exterior.coords])
+                        if temp_poly.intersects( merged_polygon ):
+
+                            ddistance = i
+                            isIntersecting = True
+                            break
+                    print(udistance,ddistance,ldistance,rdistance)
+                    if isIntersecting:
+                        
+                        if ldistance:
+                            print("lewo")
+                            poly = Polygon([(x - ldistance, y) for x, y in poly.exterior.coords])
+                        if rdistance:
+                            print("prawo")
+                            poly = Polygon([(x + rdistance, y) for x, y in poly.exterior.coords])
+                        if udistance:
+                            print("gora")
+                            poly = Polygon([(x, y+udistance) for x, y in poly.exterior.coords])
+                        if ddistance:
+                            print("dol")
+                            poly = Polygon([(x, y-ddistance) for x, y in poly.exterior.coords])
+                        merged_polygon = merged_polygon.union(poly)
+                    # minx2 = min(point[0] for point in poly.exterior.coords)
+
+                    # minx1 = max(
+                    #             point[0]
+                    #             for point in merged_polygon.exterior.coords
+                    #             if point[0] <= minx2
+                    #             )
+                    # distance = minx2 - minx1
+                    # buffered = merged_polygon.buffer(10, join_style=2)
+                    # if buffered.intersects( poly.buffer(10, join_style=2) ):
+                    #     poly = Polygon([(x - distance, y) for x, y in poly.exterior.coords])
+                    #     merged_polygon = merged_polygon.union(poly)
+
             if isinstance(merged_polygon, MultiPolygon):
                 for poly in merged_polygon:
                     combined_elements.append(poly)
@@ -409,6 +485,7 @@ def Roof_fill():
     installation_method = data['installationMethod']
     roof_type = data['roofType']
     width_unit = 1
+
 
     # Tworzenie obiektu dla elementów i wypełnienie go
 
