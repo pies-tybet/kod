@@ -373,10 +373,7 @@ def Roof_fill():
     combined_elements = []
     last_poly = None
 
-    ldistance = 0
-    rdistance = 0
-    udistance = 0
-    ddistance = 0
+    
     polygons_to_keep = []
     other_polys = []
     for group_id, group_polygons in input_groups.items():
@@ -403,58 +400,80 @@ def Roof_fill():
                 for poly in other_polys:
                     isIntersecting = False
                     temp_poly = poly
+                    l = 0
+                    r = 0
+                    u = 0
+                    d = 0
+                    print("other:" , other_polys)
+                    print("merged:" , merged_polygon)
                     for i in range(11):
-                        
-                        
+                        if isIntersecting:
+                            #break
+                            pass
                         temp_poly = Polygon([(x - i, y) for x, y in poly.exterior.coords])
                         if temp_poly.intersects( merged_polygon ):
-                            ldistance = i
+                            #poly = temp_poly
+                            l = i
                             isIntersecting = True
                             break
                     temp_poly = poly
                     for i in range(11):
-                        
-                        
+                        if isIntersecting:
+                            #break
+                            pass
                         temp_poly = Polygon([(x + i, y) for x, y in poly.exterior.coords])
                         if temp_poly.intersects( merged_polygon ):
-                            rdistance = i
+                           # poly = temp_poly
+                            r = i
                             isIntersecting = True
                             break
                     temp_poly = poly
                     for i in range(11):
-                        temp_poly = poly
-                        
+                        if isIntersecting:
+                            #break
+                            pass
                         temp_poly = Polygon([(x, y+i) for x, y in poly.exterior.coords])
                         if temp_poly.intersects( merged_polygon ):
-                            udistance = i
+                           # poly = temp_poly
+                            d = i
                             isIntersecting = True
                             break
                     temp_poly = poly
                     for i in range(11):
-                        
-                        
+                        if isIntersecting:
+                            #break
+                            pass
                         temp_poly = Polygon([(x, y-i) for x, y in poly.exterior.coords])
                         if temp_poly.intersects( merged_polygon ):
-
-                            ddistance = i
+                          #  poly = temp_poly
+                            u = i
                             isIntersecting = True
                             break
-                    print(udistance,ddistance,ldistance,rdistance)
                     if isIntersecting:
+                        print("r: "+str(r) )
+                        print("l: "+str(l))
+                        print("u: "+str(u))
+                        print("d: "+str(d))
+                        xdif = 0
+                        ydif = 0
                         
-                        if ldistance:
-                            print("lewo")
-                            poly = Polygon([(x - ldistance, y) for x, y in poly.exterior.coords])
-                        if rdistance:
-                            print("prawo")
-                            poly = Polygon([(x + rdistance, y) for x, y in poly.exterior.coords])
-                        if udistance:
-                            print("gora")
-                            poly = Polygon([(x, y+udistance) for x, y in poly.exterior.coords])
-                        if ddistance:
-                            print("dol")
-                            poly = Polygon([(x, y-ddistance) for x, y in poly.exterior.coords])
-                        merged_polygon = merged_polygon.union(poly)
+                        xdif = r-l
+                        
+                        
+                        
+                        ydif = d-u
+                        
+                        
+                        print("l"+str(l))
+                        print("xdif: "+str(xdif))
+                        print("ydif: "+str(ydif))
+                        poly = Polygon([(x + xdif, y + ydif) for x, y in poly.exterior.coords])
+
+
+
+                        if isIntersecting:
+
+                            merged_polygon = merged_polygon.union(poly)
                     # minx2 = min(point[0] for point in poly.exterior.coords)
 
                     # minx1 = max(
